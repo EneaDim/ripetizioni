@@ -425,7 +425,8 @@ def main():
             CHOOSING_DATE: [CallbackQueryHandler(choose_time, pattern=r"date_.*")],
             CHOOSING_TIME: [CallbackQueryHandler(confirm_booking, pattern=r"time_.*")],
         },
-        fallbacks=[]
+        fallbacks=[],
+        per_message=True
     )
 
     app.add_handler(conv_handler)
