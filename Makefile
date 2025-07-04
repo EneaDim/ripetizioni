@@ -52,6 +52,10 @@ bot:
 	@echo "$(ORANGE)🤖 Avvio bot Telegram$(NC)"
 	TOKEN=$(TOKEN) ADMIN_CHAT_ID=$(ADMIN_CHAT_ID) $(VENV_DIR)/bin/python3 $(SCRIPT)
 
+run:
+	@echo "$(ORANGE)🤖 Avvio bot Telegram$(NC)"
+	TOKEN=$(TOKEN) ADMIN_CHAT_ID=$(ADMIN_CHAT_ID) python3 $(SCRIPT)
+
 clean:
 	@echo "$(ORANGE)🧹 Pulizia completa$(NC)"
 	find . -type d -name '__pycache__' -exec rm -r {} +
