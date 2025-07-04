@@ -440,7 +440,15 @@ def main():
     init_db_and_populate_if_needed()
 
     print("🤖 Bot in esecuzione…")
-    app.run_polling()
+    if os.getenv("RAILWAY") == "1":
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", 8080)),
+            url_path=TELEGRAM_TOKEN,
+            webhook_url=f"ripetizioni-production.up.railway.app/{TOKEN}"
+        )
+    else:
+        application.run_polling()
 
 if __name__ == "__main__":
     main()
