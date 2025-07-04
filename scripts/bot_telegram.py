@@ -444,7 +444,7 @@ def main():
         app.run_webhook(
             listen="0.0.0.0",
             port=int(os.environ.get("PORT", 8080)),
-            url_path=TELEGRAM_TOKEN,
+            url_path=TOKEN,
             webhook_url=f"ripetizioni-production.up.railway.app/{TOKEN}"
         )
     else:
