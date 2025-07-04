@@ -3,8 +3,11 @@ ORANGE=\033[38;5;208m
 NC=\033[0m
 
 # --- VARIABILI ---
-TOKEN=7928774389:AAHgMdNoDGGKuK_n-20wbv-qWartrN-F8Y4
-ADMIN_CHAT_ID=390614228
+# Carica le variabili da .env se esiste
+ifneq (,$(wildcard .env))
+	include .env
+	export
+endif
 VENV_DIR=.venv
 DB_FILE=data/bot_users.db
 SCRIPT=scripts/bot_telegram.py

@@ -13,7 +13,7 @@ from telegram.ext import (
 )
 
 TOKEN = os.getenv("TOKEN", "INSERISCI_IL_TUO_TOKEN")
-ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 DB_FILE = "data/bot_users.db"
 
 CHOOSING_DATE, CHOOSING_TIME = range(2)
@@ -116,7 +116,7 @@ def inside_prenota_only_keyboard():
     ])
 
 async def notify_admin(text, app: Application):
-    await app.bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, parse_mode="MarkdownV2")
+    await app.bot.send_message(chat_id=ADMIN_ID, text=text, parse_mode="MarkdownV2")
 
 def escape_md(text: str) -> str:
     import re
@@ -157,7 +157,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def admin_slots(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_CHAT_ID:
+    if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("⛔ Solo l’amministratore può usare questo comando.", reply_markup=main_menu_keyboard())
         return
 
