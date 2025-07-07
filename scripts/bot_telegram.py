@@ -12,6 +12,8 @@ from telegram.ext import (
     filters,
 )
 
+from telegram.helpers import escape_markdown
+
 TOKEN = os.getenv("TOKEN", "INSERISCI_IL_TUO_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 DB_FILE = "data/bot_users.db"
@@ -149,7 +151,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if update.message:
         await log_user(user)
-        await notify_admin(f"📥 Nuovo utente: {user.id} @{user.username or '-'}", context.application)
+        username = user.username or "-"
+        escaped_username = escape_markdown(username, version=2)
+        text = f"📥 Nuovo utente: `{user.id}` @{escaped_username}"
+        await notify_admin(
+            text,
+            context.application
+        )
 
     welcome, keyboard = build_welcome_message()
     await (update.message or update.callback_query.message).reply_text(
