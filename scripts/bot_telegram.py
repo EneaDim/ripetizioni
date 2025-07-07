@@ -1,31 +1,49 @@
+# Importa il modulo sqlite3 per gestire il database locale
 import sqlite3
+
+# Importa il modulo os per accedere a variabili d'ambiente e operazioni sul filesystem
 import os
+
+# Importa datetime per gestire date e orari
 from datetime import datetime, timedelta, timezone
 
+# Importa classi e funzioni da python-telegram-bot per creare bot Telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    ConversationHandler,
-    ContextTypes,
-    filters,
+    Application,                 # Istanza principale del bot
+    CommandHandler,             # Gestore di comandi (/start, /adminslots, ecc.)
+    CallbackQueryHandler,       # Gestore per pulsanti inline
+    ConversationHandler,        # Gestore per flussi conversazionali
+    ContextTypes,               # Tipi per il contesto
+    filters,                    # Filtri per messaggi
 )
 
+# Funzione per fare escaping del Markdown v2
 from telegram.helpers import escape_markdown
 
+# Recupera il TOKEN del bot da variabile d'ambiente o usa un valore di default
 TOKEN = os.getenv("TOKEN", "INSERISCI_IL_TUO_TOKEN")
+
+# Recupera l'ID dell’amministratore da variabile d'ambiente o usa 0
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
+
+# Percorso del file del database SQLite
 DB_FILE = "data/bot_users.db"
 
+# Stati della conversazione (per ConversationHandler)
 CHOOSING_DATE, CHOOSING_TIME = range(2)
 
+# Crea la cartella 'data' se non esiste
 os.makedirs("data", exist_ok=True)
 
+# ------------------------- DATABASE ---------------------------------
+
 def init_db_and_populate_if_needed():
+    """Inizializza il database e crea slot di prenotazione per i prossimi 5 anni."""
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
 
+    # Crea la tabella utenti, se non esiste
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +55,7 @@ def init_db_and_populate_if_needed():
     )
     """)
 
+    # Crea la tabella prenotazioni, se non esiste
     cur.execute("""
     CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,16 +68,18 @@ def init_db_and_populate_if_needed():
 
     conn.commit()
 
+    # Verifica se ci sono già slot prenotabili
     cur.execute("SELECT COUNT(*) FROM bookings")
     count = cur.fetchone()[0]
 
+    # Se nessuno slot esiste, popola il database con slot per 5 anni
     if count == 0:
         start_date = datetime.now()
         end_date = start_date + timedelta(days=365 * 5)
         orari = ["16:00", "17:00", "18:00", "19:00"]
         giorno = start_date
         while giorno <= end_date:
-            if giorno.weekday() < 5:
+            if giorno.weekday() < 5:  # Solo giorni feriali
                 for ora in orari:
                     cur.execute("""
                         INSERT INTO bookings (date, time, is_booked)
@@ -69,6 +90,7 @@ def init_db_and_populate_if_needed():
     conn.close()
 
 async def log_user(user):
+    """Registra un nuovo utente nel database."""
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
     cur.execute("""
@@ -84,12 +106,16 @@ async def log_user(user):
     conn.commit()
     conn.close()
 
+# --------------------- TASTIERE -------------------------------------
+
 def main_menu_keyboard():
+    """Tastiera inline con il solo menu principale."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📜 Menu principale", callback_data="start")]
     ])
 
 def full_menu_keyboard():
+    """Tastiera completa con tutte le opzioni."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📚 Materie disponibili", callback_data="materie")],
         [InlineKeyboardButton("ℹ️ Info e tariffe", callback_data="info")],
@@ -99,6 +125,7 @@ def full_menu_keyboard():
     ])
 
 def info_prenota_keyboard():
+    """Tastiera con info e prenota."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("ℹ️ Info e tariffe", callback_data="info")],
         [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
@@ -106,37 +133,43 @@ def info_prenota_keyboard():
     ])
 
 def prenota_only_keyboard():
+    """Tastiera con solo prenotazione."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
         [InlineKeyboardButton("📜 Menu principale", callback_data="start")]
     ])
 
 def inside_prenota_only_keyboard():
+    """Tastiera per annullare prenotazioni."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("❌ Cancella prenotazione", callback_data="cancella")],
         [InlineKeyboardButton("📜 Menu principale", callback_data="start")]
     ])
 
+# ------------------------- UTILS ------------------------------------
+
 async def notify_admin(text, app: Application):
+    """Invia un messaggio all’amministratore."""
     await app.bot.send_message(chat_id=ADMIN_ID, text=text, parse_mode="MarkdownV2")
 
 def escape_md(text: str) -> str:
+    """Effettua escaping dei caratteri Markdown."""
     import re
     return re.sub(r'([_*\[\]()~`>#+\-=|{}.!])', r'\\\1', text)
 
 def build_welcome_message():
+    """Crea il messaggio di benvenuto e la tastiera iniziale."""
     welcome = (
         "👋 *Benvenuto\\!*\n"
         "\n"
-        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* "
-        "e appassionato di didattica\\.\n"
+        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* e appassionato di didattica\\.\n"
         "\n"
-        "💡 Offro *ripetizioni e consulenze personalizzate SUPSI* in:\n"
+        "💡 Offro *ripetizioni personalizzate* in:\n"
         "• Matematica\n"
         "• Informatica\n"
-        "• Elettronica Digitale & Analogica\n"
+        "• Elettronica\n"
         "\n"
-        "🎉 *Prima ora gratuita* per conoscerci, e *sconti speciali* se porti un amico\\.\n"
+        "🎉 *Prima ora gratuita* e *sconti per amici\\!*\n"
         "\n"
         "📲 *Scegli qui sotto come iniziare:*"
     )
@@ -147,17 +180,17 @@ def build_welcome_message():
     ]
     return welcome, InlineKeyboardMarkup(keyboard)
 
+# --------------------- HANDLER COMANDI ------------------------------
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gestore del comando /start o pulsante 'start'."""
     user = update.effective_user
     if update.message:
         await log_user(user)
         username = user.username or "-"
         escaped_username = escape_markdown(username, version=2)
         text = f"📥 Nuovo utente: `{user.id}` @{escaped_username}"
-        await notify_admin(
-            text,
-            context.application
-        )
+        await notify_admin(text, context.application)
 
     welcome, keyboard = build_welcome_message()
     await (update.message or update.callback_query.message).reply_text(
@@ -165,8 +198,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def admin_slots(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Mostra all’amministratore gli slot disponibili nei prossimi 10 giorni (escludendo sab e dom)."""
     if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("⛔ Solo l’amministratore può usare questo comando.", reply_markup=main_menu_keyboard())
+        await update.message.reply_text(
+            "⛔ Solo l’amministratore può usare questo comando.",
+            reply_markup=main_menu_keyboard()
+        )
         return
 
     oggi = datetime.today()
@@ -174,16 +211,21 @@ async def admin_slots(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     conn = sqlite3.connect(DB_FILE)
     cur = conn.cursor()
+
     cur.execute("""
         SELECT date, time, is_booked FROM bookings
         WHERE date >= ? AND date <= ?
+        AND strftime('%w', date) NOT IN ('0', '6')
         ORDER BY date ASC, time ASC
     """, (oggi.strftime("%Y-%m-%d"), limite.strftime("%Y-%m-%d")))
     rows = cur.fetchall()
     conn.close()
 
     if not rows:
-        await update.message.reply_text("ℹ️ Nessuno slot trovato.", reply_markup=main_menu_keyboard())
+        await update.message.reply_text(
+            "ℹ️ Nessuno slot trovato.",
+            reply_markup=main_menu_keyboard()
+        )
         return
 
     output = ""
@@ -195,9 +237,16 @@ async def admin_slots(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status = "✅" if is_booked == 0 else "❌"
         output += f"{status} {escape_md(time)}\n"
 
-    await update.message.reply_text(output, parse_mode="MarkdownV2", reply_markup=main_menu_keyboard())
+    await update.message.reply_text(
+        output,
+        parse_mode="MarkdownV2",
+        reply_markup=main_menu_keyboard()
+    )
+
+# ----------------- Conversazione prenotazioni -----------------------
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gestisce i pulsanti inline del menu."""
     query = update.callback_query
     await query.answer()
     data = query.data
@@ -261,32 +310,50 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await start(update, context)
 
 async def start_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Avvia la conversazione per prenotare una lezione (escludendo sab e dom)."""
     query = update.callback_query
     await query.answer()
 
     today = datetime.today()
     keyboard, row = [], []
-    for i in range(7):
-        day = today + timedelta(days=i)
+
+    # Genera i prossimi 7 giorni, ma solo giorni feriali
+    days_added = 0
+    day_offset = 0
+    while days_added < 7:
+        day = today + timedelta(days=day_offset)
+        day_offset += 1
+
+        if day.weekday() >= 5:  # 5 = sabato, 6 = domenica → salta
+            continue
+
         label = day.strftime("%a %d/%m")
         callback = f"date_{day.strftime('%Y-%m-%d')}"
         row.append(InlineKeyboardButton(label, callback_data=callback))
+
         if len(row) == 3:
             keyboard.append(row)
             row = []
+        days_added += 1
+
     if row:
         keyboard.append(row)
 
+    # Aggiungi i pulsanti extra sotto
+    keyboard += [
+        [InlineKeyboardButton("❌ Cancella prenotazione", callback_data="cancella")],
+        [InlineKeyboardButton("📜 Menu principale", callback_data="start")]
+    ]
+
     await query.message.reply_text(
         escape_md("🗓 Scegli una data disponibile:"),
-        reply_markup=InlineKeyboardMarkup(keyboard + 
-                                          [[InlineKeyboardButton("❌ Cancella prenotazione", callback_data="cancella")],
-                                          [InlineKeyboardButton("📜 Menu principale", callback_data="start")]]),
+        reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="MarkdownV2"
     )
     return CHOOSING_DATE
 
 async def choose_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Mostra gli orari disponibili per la data scelta."""
     query = update.callback_query
     await query.answer()
     chosen_date = query.data.replace("date_", "")
@@ -314,6 +381,7 @@ async def choose_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Mostra le prenotazioni attive da cancellare."""
     query = update.callback_query
     await query.answer()
     user_id = str(query.from_user.id)
@@ -351,6 +419,7 @@ async def cancel_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def confirm_cancellation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Chiede conferma per la cancellazione della prenotazione."""
     query = update.callback_query
     await query.answer()
 
@@ -371,6 +440,7 @@ async def confirm_cancellation(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 async def do_cancellation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Esegue la cancellazione della prenotazione nel database."""
     query = update.callback_query
     await query.answer()
 
@@ -399,6 +469,7 @@ async def do_cancellation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Conferma la prenotazione e salva nel database."""
     query = update.callback_query
     await query.answer()
     chosen_time = query.data.replace("time_", "")
@@ -424,9 +495,13 @@ async def confirm_booking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return ConversationHandler.END
 
+# ------------------------- MAIN -------------------------------------
+
 def main():
+    """Avvia il bot."""
     app = Application.builder().token(TOKEN).build()
 
+    # Definisce il ConversationHandler per le prenotazioni
     conv_handler = ConversationHandler(
         entry_points=[CallbackQueryHandler(start_booking, pattern="prenota")],
         states={
@@ -434,9 +509,10 @@ def main():
             CHOOSING_TIME: [CallbackQueryHandler(confirm_booking, pattern=r"time_.*")],
         },
         fallbacks=[],
-        per_message=True
+        per_message=False
     )
 
+    # Aggiunge gli handler
     app.add_handler(conv_handler)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("adminslots", admin_slots))
@@ -445,6 +521,7 @@ def main():
     app.add_handler(CallbackQueryHandler(do_cancellation, pattern=r"confirm_.*"))
     app.add_handler(CallbackQueryHandler(button))
 
+    # Inizializza il database
     init_db_and_populate_if_needed()
 
     print("🤖 Bot in esecuzione…")
@@ -460,4 +537,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
