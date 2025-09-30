@@ -128,15 +128,15 @@ def build_welcome_message():
     welcome = (
         "👋 *Benvenuto\\!*\n"
         "\n"
-        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* "
-        "e appassionato di didattica\\.\n"
+        "🎵 Sono *Matteo Corazza*, *insegnante di musica* con esperienza nell'insegnamento di *chitarra* e *pianoforte*, "
+        "appassionato di didattica su misura\\.\n"
         "\n"
-        "💡 Offro *ripetizioni e consulenze personalizzate SUPSI* in:\n"
-        "• Matematica\n"
-        "• Informatica\n"
-        "• Elettronica Digitale & Analogica\n"
+        "💡 Offro *lezioni e coaching musicali personalizzati* in:\n"
+        "• Chitarra \\(acustica ed elettrica\\)\n"
+        "• Pianoforte \\(classico e moderno\\)\n"
+        "• Teoria musicale, armonia, ear training\n"
         "\n"
-        "🎉 *Prima ora gratuita* per conoscerci, e *sconti speciali* se porti un amico\\.\n"
+        "🎉 *Prima lezione di prova gratuita* per conoscerci, e *sconti speciali* se porti un amico\\.\n"
         "\n"
         "📲 *Scegli qui sotto come iniziare:*"
     )
@@ -146,6 +146,29 @@ def build_welcome_message():
         [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
     ]
     return welcome, InlineKeyboardMarkup(keyboard)
+
+#def build_welcome_message():
+#    welcome = (
+#        "👋 *Benvenuto\\!*\n"
+#        "\n"
+#        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* "
+#        "e appassionato di didattica\\.\n"
+#        "\n"
+#        "💡 Offro *ripetizioni e consulenze personalizzate SUPSI* in:\n"
+#        "• Matematica\n"
+#        "• Informatica\n"
+#        "• Elettronica Digitale & Analogica\n"
+#        "\n"
+#        "🎉 *Prima ora gratuita* per conoscerci, e *sconti speciali* se porti un amico\\.\n"
+#        "\n"
+#        "📲 *Scegli qui sotto come iniziare:*"
+#    )
+#    keyboard = [
+#        [InlineKeyboardButton("📚 Materie disponibili", callback_data="materie")],
+#        [InlineKeyboardButton("ℹ️ Info e tariffe", callback_data="info")],
+#        [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
+#    ]
+#    return welcome, InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
