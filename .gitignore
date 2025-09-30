@@ -1,2 +1,6 @@
 .venv
+<<<<<<< HEAD
 .env
+=======
+token
+>>>>>>> 68a0374 (Initial commit)
