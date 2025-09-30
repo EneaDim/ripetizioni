@@ -158,18 +158,18 @@ def escape_md(text: str) -> str:
     return re.sub(r'([_*\[\]()~`>#+\-=|{}.!])', r'\\\1', text)
 
 def build_welcome_message():
-    """Crea il messaggio di benvenuto e la tastiera iniziale."""
     welcome = (
         "👋 *Benvenuto\\!*\n"
         "\n"
-        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* e appassionato di didattica\\.\n"
+        "🎵 Sono *Matteo Corazza*, *insegnante di musica* con esperienza nell'insegnamento di *chitarra* e *pianoforte*, "
+        "appassionato di didattica su misura\\.\n"
         "\n"
-        "💡 Offro *ripetizioni personalizzate* in:\n"
-        "• Matematica\n"
-        "• Informatica\n"
-        "• Elettronica\n"
+        "💡 Offro *lezioni e coaching musicali personalizzati* in:\n"
+        "• Chitarra \\(acustica ed elettrica\\)\n"
+        "• Pianoforte \\(classico e moderno\\)\n"
+        "• Teoria musicale, armonia, ear training\n"
         "\n"
-        "🎉 *Prima ora gratuita* e *sconti per amici\\!*\n"
+        "🎉 *Prima lezione di prova gratuita* per conoscerci, e *sconti speciali* se porti un amico\\.\n"
         "\n"
         "📲 *Scegli qui sotto come iniziare:*"
     )
@@ -179,6 +179,29 @@ def build_welcome_message():
         [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
     ]
     return welcome, InlineKeyboardMarkup(keyboard)
+
+#def build_welcome_message():
+#    """Crea il messaggio di benvenuto e la tastiera iniziale."""
+#    welcome = (
+#        "👋 *Benvenuto\\!*\n"
+#        "\n"
+#        "🎓 Sono un *Ingegnere Elettronico Magistrale* con oltre *5 anni di esperienza industriale* e appassionato di didattica\\.\n"
+#        "\n"
+#        "💡 Offro *ripetizioni personalizzate* in:\n"
+#        "• Matematica\n"
+#        "• Informatica\n"
+#        "• Elettronica\n"
+#        "\n"
+#        "🎉 *Prima ora gratuita* e *sconti per amici\\!*\n"
+#        "\n"
+#        "📲 *Scegli qui sotto come iniziare:*"
+#    )
+#    keyboard = [
+#        [InlineKeyboardButton("📚 Materie disponibili", callback_data="materie")],
+#        [InlineKeyboardButton("ℹ️ Info e tariffe", callback_data="info")],
+#        [InlineKeyboardButton("🗓 Prenota lezione", callback_data="prenota")],
+#    ]
+#    return welcome, InlineKeyboardMarkup(keyboard)
 
 # --------------------- HANDLER COMANDI ------------------------------
 
@@ -254,29 +277,23 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "materie":
         await query.message.reply_text(
             (
-                "📚 *Materie e competenze offerte\\:*\n\n"
-                "✅ *Matematica*\n"
-                "  \\- Analisi matematica\n"
-                "  \\- Algebra lineare e matrici\n"
-                "  \\- Statistica e probabilità\n"
-                "  \\- Matematica per l’ingegneria\n\n"
-                "✅ *Informatica*\n"
-                "  \\- Fondamenti di programmazione \\(C, Python\\)\n"
-                "  \\- Strutture dati e algoritmi\n"
-                "  \\- Sistemi operativi, basi di Linux\n"
-                "  \\- Introduzione a microcontrollori, script e automazione\n\n"
-                "✅ *Elettronica Digitale*\n"
-                "  \\- Logiche combinatorie e sequenziali\n"
-                "  \\- Flusso di progetto \\(ASIC\\-FPGA\\)\n"
-                "  \\- Progetti su FPGA e microcontrollori\n"
-                "  \\- Architetture di sistemi digitali e SoC\n"
-                "  \\- Linguaggi HDL\\: VHDL, SystemVerilog\n\n"
-                "✅ *Elettronica Analogica*\n"
-                "  \\- Elettrotecnica\n"
-                "  \\- Amplificatori operazionali e filtri\n"
-                "  \\- Circuiti alimentatori e regolatori\n"
-                "  \\- Simulazioni SPICE e analisi dei circuiti\n\n"
-                "📈 *Metodo personalizzato*: lezioni su misura per le tue esigenze accademiche o professionali\n"
+                "📚 *Corsi e competenze offerte\\:*\n\n"
+                "✅ *Chitarra*\n"
+                "  \\- Tecnica di base e avanzata \\(plettro, fingerstyle\\)\n"
+                "  \\- Ritmica, accompagnamento e arpeggi\n"
+                "  \\- Improvvisazione e linguaggio \\(rock, pop, blues, jazz\\)\n"
+                "  \\- Lettura, tablature e studio del repertorio\n\n"
+                "✅ *Pianoforte*\n"
+                "  \\- Impostazione, tecnica e indipendenza delle mani\n"
+                "  \\- Accompagnamento moderno e voicings\n"
+                "  \\- Lettura, ear training e interpretazione\n"
+                "  \\- Repertorio classico e contemporaneo\n\n"
+                "✅ *Teoria & Musicianship*\n"
+                "  \\- Teoria musicale di base e avanzata\n"
+                "  \\- Armonia funzionale e moderna\n"
+                "  \\- Ear training e solfeggio ritmico/melodico\n"
+                "  \\- Scrittura, arrangiamento e basi di home recording\n\n"
+                "📈 *Metodo personalizzato*: percorso su misura per principianti, intermedi e avanzati\n"
             ),
             parse_mode="MarkdownV2",
             reply_markup=info_prenota_keyboard()
@@ -296,14 +313,68 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "  \\- TWINT\n"
                 "  \\- Bonifico bancario\n\n"
                 "🎉 *Offerte speciali*: \n"
-                "  \\- La *prima ora è gratuita*, senza impegno\\.\n"
+                "  \\- La *prima lezione di prova è gratuita*, senza impegno\\.\n"
                 "  \\- Porta un amico e ottieni *\\-20% di sconto* sulla prossima lezione\\.\n\n"
-                "📞 Per qualsiasi dubbio o esigenza particolare, [scrivimi direttamente qui](https://t.me/eneadim)\\!\n"
-                "Sono a tua completa disposizione per costruire un piano che funzioni per te\\. 🚀"
+                "📞 Per qualsiasi dubbio o esigenza particolare, scrivimi su Telegram\\.\n"
+                "Sono a tua completa disposizione per costruire un percorso musicale efficace per te\\. 🎶"
             ),
             parse_mode="MarkdownV2",
             reply_markup=prenota_only_keyboard()
         )
+    
+    #if data == "materie":
+    #    await query.message.reply_text(
+    #        (
+    #            "📚 *Materie e competenze offerte\\:*\n\n"
+    #            "✅ *Matematica*\n"
+    #            "  \\- Analisi matematica\n"
+    #            "  \\- Algebra lineare e matrici\n"
+    #            "  \\- Statistica e probabilità\n"
+    #            "  \\- Matematica per l’ingegneria\n\n"
+    #            "✅ *Informatica*\n"
+    #            "  \\- Fondamenti di programmazione \\(C, Python\\)\n"
+    #            "  \\- Strutture dati e algoritmi\n"
+    #            "  \\- Sistemi operativi, basi di Linux\n"
+    #            "  \\- Introduzione a microcontrollori, script e automazione\n\n"
+    #            "✅ *Elettronica Digitale*\n"
+    #            "  \\- Logiche combinatorie e sequenziali\n"
+    #            "  \\- Flusso di progetto \\(ASIC\\-FPGA\\)\n"
+    #            "  \\- Progetti su FPGA e microcontrollori\n"
+    #            "  \\- Architetture di sistemi digitali e SoC\n"
+    #            "  \\- Linguaggi HDL\\: VHDL, SystemVerilog\n\n"
+    #            "✅ *Elettronica Analogica*\n"
+    #            "  \\- Elettrotecnica\n"
+    #            "  \\- Amplificatori operazionali e filtri\n"
+    #            "  \\- Circuiti alimentatori e regolatori\n"
+    #            "  \\- Simulazioni SPICE e analisi dei circuiti\n\n"
+    #            "📈 *Metodo personalizzato*: lezioni su misura per le tue esigenze accademiche o professionali\n"
+    #        ),
+    #        parse_mode="MarkdownV2",
+    #        reply_markup=info_prenota_keyboard()
+    #    )
+    #elif data == "info":
+    #    await query.message.reply_text(
+    #        (
+    #            "ℹ️ *Info & Tariffe\\:*\n\n"
+    #            "💼 *Tariffa standard*: *50 CHF\\/ora*\n\n"
+    #            "🎁 *Pacchetti risparmio*: \n"
+    #            "  \\- 5 ore: 225 CHF \\(45 CHF\\/ora\\)\n"
+    #            "  \\- 10 ore: 400 CHF \\(40 CHF\\/ora\\)\n\n"
+    #            "📅 Lezioni in presenza a Mendrisio oppure online via Zoom\\/Teams\\.\n\n"
+    #            "🔄 Possibilità di riprogrammare la lezione con almeno 24h di preavviso\\.\n\n"
+    #            "💳 *Modalità di pagamento*: \n"
+    #            "  \\- Contanti\n"
+    #            "  \\- TWINT\n"
+    #            "  \\- Bonifico bancario\n\n"
+    #            "🎉 *Offerte speciali*: \n"
+    #            "  \\- La *prima ora è gratuita*, senza impegno\\.\n"
+    #            "  \\- Porta un amico e ottieni *\\-20% di sconto* sulla prossima lezione\\.\n\n"
+    #            "📞 Per qualsiasi dubbio o esigenza particolare, [scrivimi direttamente qui](https://t.me/eneadim)\\!\n"
+    #            "Sono a tua completa disposizione per costruire un piano che funzioni per te\\. 🚀"
+    #        ),
+    #        parse_mode="MarkdownV2",
+    #        reply_markup=prenota_only_keyboard()
+    #    )
     elif data == "prenota":
         await start_booking(update, context)
     elif data == "start":
